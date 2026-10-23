@@ -150,6 +150,13 @@ if _mysql_host:
             "CONN_HEALTH_CHECKS": True,
         }
     }
+
+    # 微信云托管内置 MySQL 目前仍是 5.7.18，而 Django 4.2 默认要求 8.0.11+。
+    # 本项目只用到 5.7 已支持的字段与 SQL（含 JSONField），因此把最低版本降回 5.7；
+    # 云托管升级 MySQL 8 后可删除这段兼容代码。
+    from django.db.backends.mysql.features import DatabaseFeatures as MySQLFeatures
+
+    MySQLFeatures.minimum_database_version = (5, 7)
 else:
     # 生产环境不允许悄悄落到容器临时盘上的 SQLite（重新部署就丢数据）。
     # 确实要用 CFS 持久化 SQLite 时，显式设置 SQLITE_DIR 作为白名单。
