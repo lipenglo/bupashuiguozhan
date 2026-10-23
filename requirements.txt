@@ -1,5 +1,5 @@
 # Web 框架
-Django>=5.0,<5.2
+Django>=4.2,<5.0
 # 生产 WSGI 服务器
 gunicorn>=21.2
 # 云托管 MySQL 用纯 Python 驱动，免编译
