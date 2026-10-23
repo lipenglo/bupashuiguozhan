@@ -1,0 +1,17 @@
+# 本地/生产密钥：绝不提交
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.sqlite3
+db.sqlite3
+staticfiles/
+*.log
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store

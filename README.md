@@ -1,125 +1,67 @@
-# wxcloudrun-django
-[![GitHub license](https://img.shields.io/github/license/WeixinCloud/wxcloudrun-express)](https://github.com/WeixinCloud/wxcloudrun-express)
-![GitHub package.json dependency version (prod)](https://img.shields.io/badge/python-3.7.3-green)
+# 后端（Django）
 
-微信云托管 python Django 框架模版，实现简单的计数器读写接口，使用云托管 MySQL 读写、记录计数值。
+Python 3.11+ / Django 5。生产用 MySQL（微信云托管推荐）；本地调试未配置 `MYSQL_HOST` 时用 SQLite。生产（`DJANGO_DEBUG=0`）如果既没有 `MYSQL_HOST` 也没有显式 `SQLITE_DIR`，启动会直接报错，避免数据写进容器临时盘。
 
-![](https://qcloudimg.tencent-cloud.cn/raw/be22992d297d1b9a1a5365e606276781.png)
+## 本地安装
 
-
-## 快速开始
-前往 [微信云托管快速开始页面](https://developers.weixin.qq.com/miniprogram/dev/wxcloudrun/src/basic/guide.html)，选择相应语言的模板，根据引导完成部署。
-
-## 本地调试
-下载代码在本地调试，请参考[微信云托管本地调试指南](https://developers.weixin.qq.com/miniprogram/dev/wxcloudrun/src/guide/debug/)
-
-## 实时开发
-代码变动时，不需要重新构建和启动容器，即可查看变动后的效果。请参考[微信云托管实时开发指南](https://developers.weixin.qq.com/miniprogram/dev/wxcloudrun/src/guide/debug/dev.html)
-
-## Dockerfile最佳实践
-请参考[如何提高项目构建效率](https://developers.weixin.qq.com/miniprogram/dev/wxcloudrun/src/scene/build/speed.html)
-
-
-## 目录结构说明
-~~~
-.
-├── Dockerfile                  dockerfile
-├── README.md                   README.md文件
-├── container.config.json       模板部署「服务设置」初始化配置（二开请忽略）
-├── manage.py                   django项目管理文件 与项目进行交互的命令行工具集的入口
-├── requirements.txt            依赖包文件
-└── wxcloudrun                  app目录
-    ├── __init__.py             python项目必带  模块化思想
-    ├── apps.py                 自动生成文件apps.py
-    ├── asgi.py                 自动生成文件asgi.py, 异步服务网关接口
-    ├── migrations              数据移植（迁移）模块
-    ├── models.py               数据模块
-    ├── settings.py             项目的总配置文件  里面包含数据库 web应用 日志等各种配置
-    ├── templates               模版目录,包含主页index.html文件
-    ├── urls.py                 URL配置文件  Django项目中所有地址中（页面）都需要我们自己去配置其URL
-    ├── views.py                执行响应的代码所在模块  代码逻辑处理主要地点  项目大部分代码在此编写
-    └── wsgi.py                 自动生成文件wsgi.py, Web服务网关接口
-~~~
-
-
-## 服务 API 文档
-
-### `GET /api/count`
-
-获取当前计数
-
-#### 请求参数
-
-无
-
-#### 响应结果
-
-- `code`：错误码
-- `data`：当前计数值
-
-##### 响应结果示例
-
-```json
-{
-  "code": 0,
-  "data": 42
-}
+```bash
+cd server
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env            # 填 WX_APPID / WX_SECRET，本地可留空走调试登录
+python3 manage.py migrate
+python3 manage.py runserver 0.0.0.0:8000
 ```
 
-#### 调用示例
+验证：
 
-```
-curl https://<云托管服务域名>/api/count
-```
-
-
-
-### `POST /api/count`
-
-更新计数，自增或者清零
-
-#### 请求参数
-
-- `action`：`string` 类型，枚举值
-  - 等于 `"inc"` 时，表示计数加一
-  - 等于 `"clear"` 时，表示计数重置（清零）
-
-##### 请求参数示例
-
-```
-{
-  "action": "inc"
-}
+```bash
+curl http://127.0.0.1:8000/api/ping
 ```
 
-#### 响应结果
+## 测试
 
-- `code`：错误码
-- `data`：当前计数值
-
-##### 响应结果示例
-
-```json
-{
-  "code": 0,
-  "data": 42
-}
+```bash
+python3 manage.py test
 ```
 
-#### 调用示例
+覆盖登录、鉴权、地址 CRUD / 排序、设置同步、到站判定、行程存档、记录、退出与跨用户隔离。
 
+## 环境变量
+
+| 变量 | 默认 | 说明 |
+|---|---|---|
+| `DJANGO_DEBUG` | `1` | 生产设 `0` |
+| `DJANGO_SECRET_KEY` | 开发默认值 | 生产必须配固定随机值 |
+| `DJANGO_ALLOWED_HOSTS` | `*` | 逗号分隔 |
+| `WX_APPID` / `WX_SECRET` | 空 | 为空且允许调试时走 mock 登录 |
+| `WX_MOCK_LOGIN` | 跟随 DEBUG | 生产必须 `0` |
+| `WX_DEV_OPENID` | `dev_openid_0001` | 调试登录共用账号 |
+| `TOKEN_TTL_DAYS` | `30` | 登录态有效期 |
+| `TRIGGER_COOLDOWN_S` | `60` | 到站记录冷却 |
+| `MYSQL_HOST` 等 | 空 | 生产必填；配置后使用 MySQL |
+| `SQLITE_DIR` | `server/` | 仅本地调试；云托管 CFS 备用方案，生产建议直接用 MySQL |
+
+## 管理后台
+
+```bash
+python3 manage.py createsuperuser
 ```
-curl -X POST -H 'content-type: application/json' -d '{"action": "inc"}' https://<云托管服务域名>/api/count
+
+访问 `/admin/`，可查看用户、地址、设置、记录、行程与登录态。
+静态文件由 WhiteNoise 提供，云托管不需要额外 Nginx。
+
+## 云托管
+
+```bash
+bash ../tools/build_server_zip.sh   # 在仓库根目录执行
 ```
 
-## 使用注意
-如果不是通过微信云托管控制台部署模板代码，而是自行复制/下载模板代码后，手动新建一个服务并部署，需要在「服务设置」中补全以下环境变量，才可正常使用，否则会引发无法连接数据库，进而导致部署失败。
-- MYSQL_ADDRESS
-- MYSQL_PASSWORD
-- MYSQL_USERNAME
-以上三个变量的值请按实际情况填写。如果使用云托管内MySQL，可以在控制台MySQL页面获取相关信息。
+上传 `dist/bupashuiguozhan-server.zip`，端口 `80`，环境变量见 [../docs/云托管部署.md](../docs/云托管部署.md)。
 
+本地用 Docker 验证：
 
-## License
-
-[MIT](./LICENSE)
+```bash
+docker build -t bupashuiguozhan-server .
+docker run --rm -p 8080:80 -e DJANGO_DEBUG=0 -e DJANGO_ALLOWED_HOSTS='*' bupashuiguozhan-server
+```

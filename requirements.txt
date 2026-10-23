@@ -1,6 +1,10 @@
-asgiref==3.4.1
-Django==3.2.8
-powerline-status==2.7
-PyMySQL==1.0.2
-pytz==2021.3
-sqlparse==0.4.2
+# Web 框架
+Django>=5.0,<5.2
+# 生产 WSGI 服务器
+gunicorn>=21.2
+# 云托管 MySQL 用纯 Python 驱动，免编译
+PyMySQL>=1.1
+# admin 静态文件（云托管没有 Nginx，用 WhiteNoise 直接由 Django 提供）
+whitenoise>=6.6
+# 容器里通常没有系统 tzdata，保证 Asia/Shanghai 时区可用
+tzdata>=2024.1
